@@ -1,0 +1,206 @@
+/*
+#################################################################################################
+## 
+## MIT No Attribution
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy of this
+## software and associated documentation files (the "Software"), to deal in the Software
+## without restriction, including without limitation the rights to use, copy, modify,
+## merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+## permit persons to whom the Software is furnished to do so.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+## INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+## PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+## HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+## OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+## SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+## 
+#################################################################################################
+*/
+
+`include    "disciplines.vams"
+`timescale  1ps/1ps
+connectmodule l2e(d,a);
+    input      d;
+    ddiscrete  d;
+    output     a;
+    electrical a;
+  
+    // External parameters
+    parameter real     ttol      = 50p     from (0:inf);    // Time tolerance on above statements
+    parameter real     vtol      = 50m     from (0:inf);    // % tolerance on logic level detection
+ 
+    parameter real     vhi       = 0.7     from (0:1);      // High threshold ratio to supply (60%)
+    parameter real     vlo       = 0.3     from (0:vhi];    // Low threshold ratio to supply (40%)
+    parameter real     vhix      = vhi - vtol;              // Calculate high threshold voltage
+    parameter real     vlox      = vlo + vtol;              // Calculate low threshold voltage
+
+    parameter real     tr        = 0.2n    from (0:inf);    // Transition time
+    parameter real     tf        = tr      from (0:inf);    // Transition time
+
+    parameter real     tdx       = 40.0n   from [0:inf);    // Delay time to generate X-state
+    parameter real     rin       = 100.0G  from (0:inf);    // Input resistance
+    parameter real     cin       = 0.0     from [0:inf);    // Input capacitance
+ 
+    parameter real     rdrv      = 200.0   from [0:inf);    // Resistance for 1 or 0
+    parameter real     rhiz      = 100.0M  from [0:inf);    // Resistance for Z
+    parameter real     rx        = 500.0   from [0:inf);    // Resistance for X
+
+    parameter integer  ilimit_en = 0       from [0:1];      // 1: enable output current limiting
+    parameter real     ilimit    = 500u    from [0:inf);    // limit output current in between +/-ilimit
+
+    parameter real     minv      = 0.5     from (0:inf);    // Minimum supply  
+  
+    // 0 ..7 (1,2,4 should not be used)
+    //Hiz,WeakCap,MediumCap,Weak,LargeCap,Pull,Strong,Supply
+    function real res(input integer s);
+      begin
+         case(s)
+            0 : res = rhiz;
+            1 : res = 1.9e6;
+            2 : res = 3.2e5;
+            3 : res = 5.5e4;
+            4 : res = 9.0e3;
+            5 : res = 1.5e3;
+            6 : res = rdrv;                                                            
+            7 : res = 4.0;
+            default: res = rx;          
+         endcase
+      end
+    endfunction        
+    
+    // Internal variables
+    real vout, rout, arout, vout_tran;
+    reg  doutr    = 1'b0;
+    reg  xregion  = 1'b0;
+    reg  cm_state = 1'b0;
+    real vds, vas, scaled_in;
+
+    //Toggle counters to try to see which is the worst offening ones.    
+    integer l2e_toggle_cnt = 0; 
+    
+    //Supply connections
+    (* snps_cm_power  = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vdd"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vdd;
+    (* snps_cm_ground = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vss"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vss;
+    
+// *******************************************************************************************************
+// Analog statements
+// *******************************************************************************************************        
+    analog function real iout_limit;
+      input    x;     real     x;  //normal current contribution
+      input    m;     real     m;  //current limit
+      begin
+        if(x>m)         iout_limit =  m * 1.0;
+        else if(x<(-m)) iout_limit =  m * -1.0;
+        else            iout_limit =  m * ((((x+m)/m) * ((x+m)/m) * (1.5-((x+m)/(2.0*m))))-1.0);
+      end
+    endfunction
+
+    // D2A ddiscrete for 0, 1, Z, X
+    // Set voltage and resistance
+    integer s;
+    always begin
+        //Non-block toggle count. Non block so multilpe changes in a delta cycle are classed as 1. 
+        //Does not cover multiple changes that result in the same value.
+        l2e_toggle_cnt <= l2e_toggle_cnt + 1;
+        
+        //Get resolved drive strength.
+        $pli_get_strength(d, s); 
+        
+        //Decode logic value
+        casez(s[1:0])
+            2'b00 : begin     // 1'b0
+               vout = 0.0;
+               rout = res(s[7:5]);//res[s[7:5]];
+            end
+            2'b01 : begin     // 1'b1
+               vout = 1.0;
+               rout = res(s[4:2]);//res[s[4:2]];
+            end            
+            2'b10 : begin     // 1'bz
+               vout = 0.5;
+               rout = res(6);//res[6];
+            end
+            default : begin   // 1'bx
+               vout = 0.5;
+               rout = res(8);
+            end 
+        endcase
+                
+        //Create ln version for resistance
+        rout = ln(rout);
+        
+        //Wait on next event which should trigger even if the resolved 
+        //value is the same but the strength changes.
+        @(d); 
+    end
+
+// *******************************************************************************************************
+// A2D path
+// *******************************************************************************************************
+    reg  enable_a2d = 1'b1;
+    //initial enable_a2d = ($receiver_count(d) > 0) ? 1'b1:1'b0; (new function in Verilog-AMS 2023)
+
+    //Detect when the supply is ok and when not force 
+    //logic output to be 1'bx
+    always @(above(minv - vds,           ttol, vtol, enable_a2d)) cm_state = 1'b0;
+    always @(above(vds  - (minv - vtol), ttol, vtol, enable_a2d)) cm_state = 1'b1;
+
+    //Assume electrical is the strongest signal
+    assign (supply0, supply1) d = enable_a2d ? (cm_state ? doutr:1'bx):d;
+
+    // When the input crosses above the vxh threshold, the output goes to 1. X->1 transition
+    always @(above(scaled_in - vhi,  ttol, vtol, enable_a2d)) begin
+      doutr    = 1'b1;
+      xregion  = 1'b0;
+      disable  xregion_always;
+    end
+    // When the input crosses below the vxh1a threshold, X region has been entered. 1->X transition
+    always @(above(vhix - scaled_in, ttol, vtol, enable_a2d))  begin
+      if(doutr===1'b1) xregion = 1'b1; 
+    end
+
+    // When the input crosses below the vxla threshold, the output goes to 0. X->0 transition
+    always @(above(vlo - scaled_in,  ttol, vtol, enable_a2d)) begin
+      doutr    = 1'b0;
+      xregion  = 1'b0;
+      disable  xregion_always;
+    end
+    // When the input crosses above the vxl1a threshold, X region has been entered. 0->X transition
+    always @(above(scaled_in - vlox, ttol, vtol, enable_a2d)) begin
+        if(doutr===1'b0) xregion = 1'b1;
+    end
+
+    // Wait for tdx (scaled by `timescale), then go to X but only if xregion is still at 1. Sequencing
+    // could mean it is 0 but the other always block has not triggered.
+    always @(posedge xregion) begin : xregion_always        
+        #(tdx/1.0e-12) if(xregion==1'b1) doutr = 1'bx;
+    end
+    // Turn off X-state generation if transistion before tdx
+    always @(negedge xregion) begin
+        disable xregion_always;
+    end
+    
+// *******************************************************************************************************
+// Analog statements
+// *******************************************************************************************************        
+    analog begin
+        //Create a scaled input signal relative to vdd,vss
+        vds       = V(vdd,vss);
+        vas       = V(  a,vss);
+        scaled_in = vas/max(vds, 1m) * transition(cm_state==1'b1, 0, tr, tf);
+
+        //Transistion the discrete values and make them as PWL 
+        arout     = exp(transition(rout,0,tr,tf));
+        vout_tran = transition(vout,0,tr,tf,ttol);
+        
+        //Voltage output needs to be relative to vss or V(vss) has to be added in.
+	    if(ilimit_en)    I(a)      <+ iout_limit((vas-vds*vout_tran)/arout, ilimit);
+        else begin
+           if(arout > 1) I(a)      <+ (vas-vds*vout_tran)/arout;
+           else          V(a, vss) <+ vds*vout_tran + I(a,vss)*arout;
+        end
+    end
+
+endmodule

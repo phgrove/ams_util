@@ -1,0 +1,94 @@
+/*
+#################################################################################################
+## 
+## MIT No Attribution
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy of this
+## software and associated documentation files (the "Software"), to deal in the Software
+## without restriction, including without limitation the rights to use, copy, modify,
+## merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+## permit persons to whom the Software is furnished to do so.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+## INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+## PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+## HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+## OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+## SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+## 
+#################################################################################################
+*/
+
+`define      ttol      50p       //ttol on above statements.
+`define      vtol      40m       //vtol on signals (not they are a %)
+ 
+`define      vhi       0.7       // High threshold ratio to supply (60%)
+`define      vlo       0.3       // Low threshold ratio to supply  (40%)
+
+`define      tr        0.2n      // Transition time
+`define      tf        `tr       // Transition time
+
+`define      tdx       40.0n     // Delay time to generate X-state
+`define      rin       100.0G    // Input resistance
+`define      cin       0.0       // Input capacitance
+ 
+`define      rdrv      200.0     // Resistance for 1 or 0
+`define      rhiz      100.0M    // Resistance for Z
+`define      rx        500.0     // Resistance for X
+
+`define      ilimit_en 0         // 1: enable output current limiting
+`define      ilimit    500u      // limit output current in between +/-ilimit
+
+`define      minv      0.5       // Minimum supply  
+
+
+connectrules crules;
+    
+    //Handle the fact many use 'logic' as well as ddiscrete a discipline name
+    //connect logic, ddiscrete resolveto ddiscrete;
+    
+    connect e2l  #(.ttol     (`ttol       ),
+                   .vtol     (`vtol       ),
+                   .vhi      (`vhi        ),
+                   .vlo      (`vlo        ),
+                   .tr       (`tr         ),
+                   .tf       (`tf         ),
+                   .tdx      (`tdx        ),
+                   .rin      (`rin        ),
+                   .cin      (`cin        ),
+                   .minv     (`minv       )) input electrical, output logic;  
+
+    connect l2e  #(.ttol     (`ttol       ),
+                   .vtol     (`vtol       ),
+                   .vhi      (`vhi        ),
+                   .vlo      (`vlo        ),
+                   .tr       (`tr         ),
+                   .tf       (`tf         ),
+                   .tdx      (`tdx        ),
+                   .rin      (`rin        ),
+                   .cin      (`cin        ),
+                   .rdrv     (`rdrv       ),
+                   .rhiz     (`rhiz       ),
+                   .rx       (`rx         ),
+                   .ilimit_en(`ilimit_en  ),
+                   .ilimit   (`ilimit     ),
+                   .minv     (`minv       )) input logic, output electrical;         
+
+    connect bidir#(.ttol     (`ttol       ),
+                   .vtol     (`vtol       ),
+                   .vhi      (`vhi        ),
+                   .vlo      (`vlo        ),
+                   .tr       (`tr         ),
+                   .tf       (`tf         ),
+                   .tdx      (`tdx        ),
+                   .rin      (`rin        ),
+                   .cin      (`cin        ),
+                   .rdrv     (`rdrv       ),
+                   .rhiz     (`rhiz       ),
+                   .rx       (`rx         ),
+                   .ilimit_en(`ilimit_en  ),
+                   .ilimit   (`ilimit     ),
+                   .minv     (`minv       )) inout logic, inout electrical;
+ 
+endconnectrules
+

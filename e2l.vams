@@ -1,0 +1,119 @@
+/*
+#################################################################################################
+## 
+## MIT No Attribution
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy of this
+## software and associated documentation files (the "Software"), to deal in the Software
+## without restriction, including without limitation the rights to use, copy, modify,
+## merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+## permit persons to whom the Software is furnished to do so.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+## INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+## PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+## HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+## OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+## SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+## 
+#################################################################################################
+*/
+
+`include    "disciplines.vams"
+`timescale  1ps/1ps
+
+connectmodule e2l(a,d);
+    input      a;
+    electrical a;
+    output     d;
+    ddiscrete  d;
+
+    // External parameters
+    parameter real ttol = 50p    from (0:inf);     // Time tolerance on above statements
+    parameter real vtol = 50m    from (0:inf);     // % tolerance on logic level detection
+      
+    parameter real vhi  = 0.6    from (0:1);       // High threshold ratio to supply (60%)
+    parameter real vlo  = 0.4    from (0:vhi];     // Low threshold ratio to supply (40%)
+    parameter real vhix = vhi - vtol;              // Calculate high threshold voltage
+    parameter real vlox = vlo + vtol;              // Calculate low threshold voltage
+
+    parameter real tr   = 0.2n   from (0:inf);     // Transition time
+    parameter real tf   = tr     from (0:inf);     // Transition time
+
+    parameter real tdx  = 40.0n  from [0:inf);     // Delay time to generate X-state
+    parameter real rin  = 100.0G from (0:inf);     // Input resistance
+    parameter real cin  = 0.0    from [0:inf);     // Input capacitance
+
+    parameter real minv = 0.5    from (0:inf);     // Minimum supply  
+
+    //Toggle counters to try to see which is the worst offening ones.
+    integer e2l_toggle_cnt = 0; 
+  
+    //Supply connections
+    (* snps_cm_power  = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vdd"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vdd;
+    (* snps_cm_ground = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vss"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vss;
+
+    // Internal variables
+    reg  enable_a2d  = 1'b1; 
+    //initial enable_a2d = ($receiver_count(d) > 0) ? 1'b1:1'b0; (new function in Verilog-AMS 2023)
+
+    reg  doutr       = 1'b0;
+    reg  xregion     = 1'b0;
+    reg  cm_state    = 1'b0;
+    real vds, vas, scaled_in;
+
+    //Detect when the supply is ok and when not force 
+    //logic output to be 1'bx
+    always @(above(minv - vds,           ttol, vtol)) cm_state = 1'b0;
+    always @(above(vds  - (minv - vtol), ttol, vtol)) cm_state = 1'b1;
+
+    //Assume electrical is the strongest signal
+    assign (supply0, supply1) d = cm_state ? doutr:1'b0; //Need input to be 1'b0 else POR causes issues.
+
+    // When the input crosses above the vxh threshold, the output goes to 1. X->1 transition
+    always @(above(scaled_in - vhi,  ttol, vtol, enable_a2d)) begin
+      doutr    = 1'b1;
+      xregion  = 1'b0;
+      e2l_toggle_cnt <= e2l_toggle_cnt + 1;
+      disable  xregion_always;
+    end
+    // When the input crosses below the vxh1a threshold, X region has been entered. 1->X transition
+    always @(above(vhix - scaled_in, ttol, vtol, enable_a2d))  begin
+      if(doutr===1'b1) xregion = 1'b1; 
+    end
+
+    // When the input crosses below the vxla threshold, the output goes to 0. X->0 transition
+    always @(above(vlo - scaled_in,  ttol, vtol, enable_a2d)) begin
+      doutr    = 1'b0;
+      xregion  = 1'b0;
+      e2l_toggle_cnt <= e2l_toggle_cnt + 1;      
+      disable  xregion_always;
+    end
+    // When the input crosses above the vxl1a threshold, X region has been entered. 0->X transition
+    always @(above(scaled_in - vlox, ttol, vtol, enable_a2d)) begin
+        if(doutr===1'b0) xregion = 1'b1;
+    end
+
+    // Wait for tdx (scaled by `timescale), then go to X but only if xregion is still at 1. Sequencing
+    // could mean it is 0 but the other always block has not triggered.
+    always @(posedge xregion) begin : xregion_always        
+        #(tdx/1.0e-12) if(xregion==1'b1) begin doutr = 1'bx;   e2l_toggle_cnt <= e2l_toggle_cnt + 1; end
+    end
+    // Turn off X-state generation if transistion before tdx
+    always @(negedge xregion) begin
+        disable xregion_always;
+    end
+
+    analog begin
+        //Create a scaled 
+        vds       = V(vdd,vss);
+        vas       = V(  a,vss);
+        scaled_in = (vas/max(vds, 1m)) * transition(cm_state==1'b1, 0.0, tr, tf);
+
+        //RC load on input. Expectation is rin is large.
+        I(a, vss) <+ V(a, vss)/rin;
+        I(a, vss) <+ ddt(cin*V(a, vss));
+    end
+
+endmodule
+

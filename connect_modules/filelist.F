@@ -1,7 +1,3 @@
-
-//Command file
-+optconfigfile+ams.config.cfg 
-
 //Connect Modules
 crules.vams
 bidir.vams

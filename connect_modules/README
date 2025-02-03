@@ -1,1 +1,7 @@
+These are modified connect module from the default ones supplied with the Synopsys AMS simulator.
 
+- Logic drive strength to output resistance mapping. (Require VPI code to do this.)
+- Toggle counter to help identify incorrect partitioning.
+- Optional current limited electrical output for L2E/BiDir.
+- Code in place to support the Verilog-AMS 2023 $receiver_count() to optimize the L2E/Bidir when there are not logic receivers on the net. 
+- Attributes for Cadence inherited connections that are reported in the warning file.

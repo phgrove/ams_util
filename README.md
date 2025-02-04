@@ -1,1 +1,1 @@
-# ams_util
+This is a collection of script and files to enable VCS-XA AMS to use extract and run using a Virtuoso design database. The scripts/ams_netlist.pl is a routine to run the 'runams' command and post process it into a Verilog Configuration based setup using LRM constructs. In addition there are some enchanced connect modules to work with Synopsys and Cadence attributes. 

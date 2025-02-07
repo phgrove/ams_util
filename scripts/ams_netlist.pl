@@ -345,7 +345,7 @@ foreach my $lib ( sort keys %libs) {
                 my $libname = $lib;
                 
                 if($libs{$lib}{$cell}{$ext}{$view}{count} > 0) { 
-                    #Use the count and variant which is working. Russ Giles sugguestion
+                    #Use the count and variant which is working. One sugguestion
                     #of using the view name is probably going to work and better as you 
                     #can't have 2 views of the same name for the same cells. Needs testing
                     $libname = "${libname}_variant_".($libs{$lib}{$cell}{$ext}{$view}{count});                    

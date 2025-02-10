@@ -480,8 +480,8 @@ while(<FILE>){
                  }
              }                    
              printf CONFIG "   instance %-150s use %s; //digitaltext\n", $inst, "work.sv_config__${cell}:config";
-             #Could we end up with 2 or more instance bindings the same?
-             push @ext_dig_cells, $cell; 
+             #Could we end up with 2 or more instance bindings the same.
+             if(!grep( /^$cell$/, @ext_dig_cells )) { push @ext_dig_cells, $cell; }
         } elsif($2 eq "analogtext") {
              #probably needs to be updated once i have a testcase. At the moment set them to work library
              printf CONFIG "//   instance %-150s liblist %s; //analogtext\n", $inst, "ams_worklib";

@@ -343,19 +343,22 @@ foreach my $lib ( sort keys %libs) {
             foreach my $view (sort keys %{$libs{$lib}{$cell}{$ext}} ) {
                 
                 my $libname = $lib;
+		my $lib_file= "${libname}.common"; # Name of file for cells without explicity view differences
                 
                 if($libs{$lib}{$cell}{$ext}{$view}{count} > 0) { 
                     #Use the count and variant which is working. One sugguestion
                     #of using the view name is probably going to work and better as you 
                     #can't have 2 views of the same name for the same cells. Needs testing
-                    $libname = "${libname}_variant_".($libs{$lib}{$cell}{$ext}{$view}{count});                    
+                    $libname = "${libname}_variant_".($libs{$lib}{$cell}{$ext}{$view}{count});    
+
+                    $lib_file = "${libname}";
                 } 
 
                 #Add lib name to the view the we know where the data should be pushed to.
                 $libs{$lib}{$cell}{$ext}{$view}{"libname"} = "$libname";               
                 
                 #Create file for the output to go to.                                
-                my $out_file = "$temp_location/merged/${libname}${ext}";
+                my $out_file = "$temp_location/merged/${lib_file}${ext}";
                                 
                 #Add to file that is <library name>.<ext>
                 #Create file it not already there and added a new line top and bottom of the one cat'ed in
@@ -370,10 +373,10 @@ foreach my $lib ( sort keys %libs) {
                 `echo "\n"                                  >> ${out_file}`;   
 
                 #Create hash for lib.map
-                $libmap_mapping{$libname}{"${netlist_path}/${libname}${ext}"} = ($libmap_mapping{$libname}{"${netlist_path}/${libname}${ext}"} || 0) + 1;
+                $libmap_mapping{$libname}{"${netlist_path}/${lib_file}${ext}"} = ($libmap_mapping{$libname}{"${netlist_path}/${lib_file}${ext}"} || 0) + 1;
                 
-                if($libmap_mapping{$libname}{"${netlist_path}/${libname}${ext}"} == 1) { 
-                    `touch $outdir/filelist.f; echo '${netlist_path}/${libname}${ext}' >> $outdir/filelist.f`;
+                if($libmap_mapping{$libname}{"${netlist_path}/${lib_file}${ext}"} == 1) { 
+                    `touch $outdir/filelist.f; echo '${netlist_path}/${lib_file}${ext}' >> $outdir/filelist.f`;
                 }
             }
         }

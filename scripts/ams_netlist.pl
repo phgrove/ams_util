@@ -619,11 +619,33 @@ if(-e "$temp_location/netlist/cds_globals.vams") {
 #######################################################################################
 `echo '+incdir+${netlist_path}' >> $outdir/filelist.f`;
 
-#Spice model - but what about spice text views or Verilog-A included in the spectre netlist.
-# Remove amsd_subckt_bind=yes 
+#Spice model 
 if(-e "$temp_location/netlist/spiceModels.scs") {
-    `cp $netlist_location/netlist/spiceModels.scs       $outdir`;
-    `perl -0777 -pi -e 's/ amsd_subckt_bind=yes//g'     $outdir/spiceModels.scs`;
+    open(my $spicemodels,   "<", "${temp_location}/netlist/spiceModels.scs");
+    open(my $op_spicemodels,">", "${path}spiceModels.scs");
+    while(<$spicemodels>){
+       chomp;
+       #Map IC_INVOKE_DIR by mapping to the path to virtuoso.
+       $_ =~ s/\$\{IC_INVOKE_DIR\}/\Q${virtuoso_path}\E/;
+       #Fix WORKSPACE paths
+       if(defined $ENV{WORKSPACE}) { $_ =~ s/\$ENV{WORKSPACE}/\$WORKSPACE/;}
+       #remove amsd_subckt_bind statements
+       $_ =~ s/ amsd_subckt_bind=yes//g;
+       #Deal with spice/spectre/pspice text views
+       #include "<some path>/<cell>/<view>/spectre.scs"
+       if($_ =~ m/^\s*(?:pspice_)?include\s+\"(.*\/\w+\/\w+\/(spice\.spc|spectre\.scs|design\.pspice))\"(.*)$/) {
+            my $line = $1;
+            my $post_fix = $3;
+            $line =~ m/.*\/(\w+)\/(\w+)\/(spice\.spc|spectre\.scs|design\.pspice)/;
+            `cp -L $line  ${path}$1.$2.$3; chmod +w ${path}$1.$2.$3`;
+            my $include = ($line =~ m/.*\.pspice$/) ? "pspice_include":"include";
+            print $op_spicemodels "$include \"$1.$2.$3\"$post_fix\n";
+        } else {
+           print $op_spicemodels "$_\n";
+        }
+    }
+    close($spicemodels);
+    close($op_spicemodels);
 }
 
 #PureAnalog files just copy over.

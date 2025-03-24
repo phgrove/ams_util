@@ -190,7 +190,7 @@ while(<IN_FILE>){
                     print OUT_FILE "//Key        : inh_conn_prop_name\n";
                     print OUT_FILE "//Module type: module\n";
                     print OUT_FILE "//Construct  : $construct\n";
-                    $ams_cmd = "ams_cdef_net_cm -lib $lib -cell $mod -cm_net { $node } -default_supply { ".($name eq 'dig_vdd' ? "snps_cm_power":"snps_cm_ground")." => $default  };";
+                    $ams_cmd = "ams_cdef_net_cm -lib $lib -cell $mod -cm_net { $node } -default_supply { ".($name =~ /^\w*vdd/$ ? "snps_cm_power":"snps_cm_ground")." => $default  };";
                     if(exists $ams_cmd{$ams_cmd} ) {
                         print OUT_FILE "//$ams_cmd\n";
                     } else {

@@ -195,12 +195,9 @@ connectmodule l2e(d,a);
         arout     = exp(transition(rout,0,tr,tf));
         vout_tran = transition(vout,0,tr,tf,ttol);
         
-        //Voltage output needs to be relative to vss or V(vss) has to be added in.
-	    if(ilimit_en)    I(a)      <+ iout_limit((vas-vds*vout_tran)/arout, ilimit);
-        else begin
-           if(arout > 1) I(a)      <+ (vas-vds*vout_tran)/arout;
-           else          V(a, vss) <+ vds*vout_tran + I(a,vss)*arout;
-        end
+        //Keep branch contribution the same event though I(a) could be used.
+	if(arout > 1) I(a, vss) <+ (ilimit_en) ? iout_limit((vas-vds*vout_tran)/arout, ilimit):(vas-vds*vout_tran)/arout;
+        else          V(a, vss) <+ vds*vout_tran + I(a,vss)*arout;
     end
 
 endmodule

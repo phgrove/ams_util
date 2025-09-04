@@ -156,9 +156,12 @@ print "Netlist location: $netlist_location\n";
 `mkdir $netlist_location`;
 #.cdsenv file passed to runams for any specific opeiotns
 `touch $netlist_location/.cdsenv`;
+#-portdrill require Virtuso Studio 23.1 ISR9 or later to work correctly. It needs unlPortDrill="execpt top" and printNetSetForPortDrill=t
 `echo 'ams.compilerOpts      nowarnVlog                    string   "DLNOHV,NSVCER,DLCLIB,DLCOMBR"' >> $netlist_location/.cdsenv`;
-#-portdrill require Virtuso Studio 23.1 ISR9 or later to work correctly.
-my $command = "runams -lib $lib -cell $cell -view $view -netlist all -cdsenv ${netlist_location}/.cdsenv -portdrill -cdslib $cdslib_path -log ${netlist_location}/run.log -rundir ${netlist_location} -portdrill all -netlisteropts 'amsPortConnectionByNameOrOrder=name:useSpectreInfo=spectre veriloga spice' -savescripts -64";
+`echo 'ams.netlisterOpts     iprobeGenPlace                string   "netlist.vams"' 				>> $netlist_location/.cdsenv`;
+`echo 'ams.netlisterOpts     printNetSetForPortDrill       boolean  t'								>> $netlist_location/.cdsenv`;
+`echo 'ams.netlisterOpts     unlPorDrill                   string   except top"' 					>> $netlist_location/.cdsenv`;
+my $command = "runams -lib $lib -cell $cell -view $view -netlist all -cdsenv ${netlist_location}/.cdsenv -cdslib $cdslib_path -log ${netlist_location}/run.log -rundir ${netlist_location} -portdrill all -netlisteropts 'amsPortConnectionByNameOrOrder=name:useSpectreInfo=spectre veriloga spice' -savescripts -64";
 system("cd $virtuoso_path; $command");
 $main_neltist_file= "$netlist_location/netlist/$main_neltist_file"; 
 $textinputs       = "$netlist_location/netlist/$textinputs";   

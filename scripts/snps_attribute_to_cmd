@@ -195,7 +195,8 @@ while(<IN_FILE>){
                         print OUT_FILE "//$ams_cmd\n";
                     } else {
                         $ams_cmd{$ams_cmd} = undef;
-                        print OUT_FILE "$ams_cmd\n";
+                        #No longer reuired out as it defined in the main vcsAD.init rather than generated on the fly. Line written out as a comment only.                       
+                        print OUT_FILE "//$ams_cmd\n";
                     }
                     print OUT_FILE "\n";
                 } else {

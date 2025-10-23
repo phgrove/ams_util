@@ -50,8 +50,8 @@ connectmodule e2l(a,d);
     integer e2l_toggle_cnt = 0; 
   
     //Supply connections
-    (* snps_cm_power  = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vdd"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vdd;
-    (* snps_cm_ground = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vss"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vss;
+    (* snps_cm_power  = "cds_globals.\\gnd! " *) electrical vdd;
+    (* snps_cm_ground = "cds_globals.\\gnd! " *) electrical vss;
 
     // Internal variables
     reg  enable_a2d  = 1'b1; 

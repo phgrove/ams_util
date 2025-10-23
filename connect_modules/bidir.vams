@@ -82,8 +82,8 @@ connectmodule bidir(d,a);
     real vds, vas, scaled_in;
     
     //Supply connections
-    (* snps_cm_power  = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vdd"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vdd;
-    (* snps_cm_ground = "cds_globals.\\gnd! " *) electrical (* integer inh_conn_prop_name = "dig_vss"; integer inh_conn_def_value = "cds_globals.\\gnd! "; *) vss;
+    (* snps_cm_power  = "cds_globals.\\gnd! " *) electrical vdd;
+    (* snps_cm_ground = "cds_globals.\\gnd! " *) electrical vss;
 
     
 // *******************************************************************************************************
@@ -201,7 +201,7 @@ connectmodule bidir(d,a);
         vout_tran = transition(vout,0,tr,tf,ttol);
         
         //Keep branch contribution the same event though I(a) could be used.
-	if(arout > 1) I(a, vss) <+ (ilimit_en) ? iout_limit((vas-vds*vout_tran)/arout, ilimit):(vas-vds*vout_tran)/arout;
+	    if(arout > 1) I(a, vss) <+ (ilimit_en) ? iout_limit((vas-vds*vout_tran)/arout, ilimit):(vas-vds*vout_tran)/arout;
         else          V(a, vss) <+ vds*vout_tran + I(a,vss)*arout;
     end
 

@@ -17,6 +17,8 @@
 // 
 //###############################################################################################
 
+//This filelist should be included via a -F or -File
+
 //Connect Modules
 crules.vams
 bidir.vams

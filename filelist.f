@@ -30,3 +30,6 @@
 -ams
 -ams_dresolution
 -ams_iereport
+
+//Connect Modules
+-F connect_modules/filelist.F

@@ -82,8 +82,8 @@ connectmodule bidir(d,a);
     real vds, vas, scaled_in;
     
     //Supply connections
-    (* snps_cm_power  = "cds_globals.\\gnd! " *) electrical vdd;
-    (* snps_cm_ground = "cds_globals.\\gnd! " *) electrical vss;
+    (* snps_cm_power  = "snps_globals.\\gnd! " *) electrical vdd;
+    (* snps_cm_ground = "snps_globals.\\gnd! " *) electrical vss;
 
     
 // *******************************************************************************************************

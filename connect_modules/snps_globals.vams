@@ -1,0 +1,9 @@
+`include "disciplines.vams"
+
+module snps_globals;
+
+   // Global Ground for unconnected Connect Modules
+   electrical \gnd! ;
+   ground     \gnd! ;
+
+endmodule

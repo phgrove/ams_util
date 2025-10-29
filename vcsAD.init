@@ -29,11 +29,11 @@ ams_set_discipline discipline=electrical cell=dig_top node=VSS;
 
 //Setup the commands to handle inherited connect attributes.
 //cm_net is internal net name, default_supply sets default value for SNPS attributes, inherited_supply sets the default to the CDNS inherted property names. 
-ams_cdef_net_cm -lib WORK -cell l2e   -cm_net { vdd } -default_supply { snps_cm_power  => cds_globals.\\gnd!  } -inherited_supply { vdd => cds_globals.\\gnd!  };
-ams_cdef_net_cm -lib WORK -cell l2e   -cm_net { vss } -default_supply { snps_cm_ground => cds_globals.\\gnd!  } -inherited_supply { vss => cds_globals.\\gnd!  };
+ams_cdef_net_cm -lib WORK -cell l2e   -cm_net { vdd } -default_supply { snps_cm_power  => snps_globals.\\gnd!  } -inherited_supply { vdd => snps_globals.\\gnd!  };
+ams_cdef_net_cm -lib WORK -cell l2e   -cm_net { vss } -default_supply { snps_cm_ground => snps_globals.\\gnd!  } -inherited_supply { vss => snps_globals.\\gnd!  };
 
-ams_cdef_net_cm -lib WORK -cell e2l   -cm_net { vdd } -default_supply { snps_cm_power  => cds_globals.\\gnd!  } -inherited_supply { vdd => cds_globals.\\gnd!  };
-ams_cdef_net_cm -lib WORK -cell e2l   -cm_net { vss } -default_supply { snps_cm_ground => cds_globals.\\gnd!  } -inherited_supply { vss => cds_globals.\\gnd!  };
+ams_cdef_net_cm -lib WORK -cell e2l   -cm_net { vdd } -default_supply { snps_cm_power  => snps_globals.\\gnd!  } -inherited_supply { vdd => snps_globals.\\gnd!  };
+ams_cdef_net_cm -lib WORK -cell e2l   -cm_net { vss } -default_supply { snps_cm_ground => snps_globals.\\gnd!  } -inherited_supply { vss => snps_globals.\\gnd!  };
 
-ams_cdef_net_cm -lib WORK -cell bidir -cm_net { vdd } -default_supply { snps_cm_power  => cds_globals.\\gnd!  } -inherited_supply { vdd => cds_globals.\\gnd!  };
-ams_cdef_net_cm -lib WORK -cell bidir -cm_net { vss } -default_supply { snps_cm_ground => cds_globals.\\gnd!  } -inherited_supply { vss => cds_globals.\\gnd!  };
+ams_cdef_net_cm -lib WORK -cell bidir -cm_net { vdd } -default_supply { snps_cm_power  => snps_globals.\\gnd!  } -inherited_supply { vdd => snps_globals.\\gnd!  };
+ams_cdef_net_cm -lib WORK -cell bidir -cm_net { vss } -default_supply { snps_cm_ground => snps_globals.\\gnd!  } -inherited_supply { vss => snps_globals.\\gnd!  };

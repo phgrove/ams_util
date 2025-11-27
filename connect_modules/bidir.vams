@@ -93,9 +93,7 @@ connectmodule bidir(d,a);
       input    x;     real     x;  //normal current contribution
       input    m;     real     m;  //current limit
       begin
-        if(x>m)         iout_limit =  m * 1.0;
-        else if(x<(-m)) iout_limit =  m * -1.0;
-        else            iout_limit =  m * ((((x+m)/m) * ((x+m)/m) * (1.5-((x+m)/(2.0*m))))-1.0);
+         iout_limit = m*(((x/m)/(pow(1.0+pow(x/m,14),1.0/14.0))));
       end
     endfunction
 

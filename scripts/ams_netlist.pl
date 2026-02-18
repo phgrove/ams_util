@@ -414,7 +414,7 @@ while(<FILE>){
             foreach my $t (sort keys %{$libs{$2}{$1}}) {
                 foreach my $tt (sort keys %{$libs{$2}{$1}{$t}}) {
                     if($tt eq $3) {
-                        printf CONFIG "   cell     %-150s use %s.%s;\n", $1, $libs{$2}{$1}{$t}{$tt}{"libname"}, $1;
+                        printf CONFIG "   cell     %-150s use %s.%s;\n", escape_name($1), escape_name($libs{$2}{$1}{$t}{$tt}{"libname"}), escape_name($1);
                         last CELL_MAP;
                     }
                 }
@@ -431,7 +431,7 @@ while(<FILE>){
                     foreach my $ext (sort keys %{$libs{$lib}{$cell}}) {
                         foreach $view (sort keys %{$libs{$lib}{$cell}{$ext}} ) {
                             if($cell eq $1) {
-                                printf CONFIG "   cell     %-150s use %s.%s;\n", $1, $libs{$lib}{$cell}{$ext}{$view}{"libname"}, $1;
+                                printf CONFIG "   cell     %-150s use %s.%s;\n", escape_name($1), escape_name($libs{$lib}{$cell}{$ext}{$view}{"libname"}), escape_name($1);
                                 $found = 1;
                                 last EXT_DIG;
                             }
@@ -441,14 +441,14 @@ while(<FILE>){
             }
             if(!$found) {
                 #Cells is external to s claim it comes from another Verilog Configuration file.
-                printf CONFIG "   cell     %-150s use %s; //digitaltext\n", $1, "work.sv_config__$1:config";
+                printf CONFIG "   cell     %-150s use %s; //digitaltext\n", escape_name($1), "work.sv_config__$1:config";
                 push @ext_dig_cells, $1;
             }            
         }       
     } 
     #analogtext - Just need to list is in the file to say it comes from a model as a comment.
     elsif($_ =~ m/\s+config\s+cell=\"(.*)\"\s+view=\"analogtext\"/ ) {
-        printf CONFIG "//   cell     %-150s liblist %s; //analogtext\n", $1, "ams_worklib";
+        printf CONFIG "//   cell     %-150s liblist %s; //analogtext\n", escape_name($1), "ams_worklib";
     }      
     #Instance bindings
     elsif($_ =~ m/^\s*config\s+inst=\"(.*)\"\s+instMaster=\"(.*)\"\s+lib=\"(.*)\"\s+view=\"(.*)\"\s+parent=\"(.*?)\".*$/){
@@ -458,7 +458,7 @@ while(<FILE>){
             foreach my $t (sort keys %{$libs{$3}{$2}}) {
                 foreach my $tt (sort keys %{$libs{$3}{$2}{$t}}) {
                     if($tt eq $4) {
-                        printf CONFIG "   instance %-150s use %s.%s;\n", $1, $libs{$3}{$2}{$t}{$tt}{"libname"}, $2;
+                        printf CONFIG "   instance %-150s use %s.%s;\n", escape_name($1), escape_name($libs{$3}{$2}{$t}{$tt}{"libname"}), escape_name($2);
                         last INST_MAP;
                     }
                 }
@@ -473,7 +473,7 @@ while(<FILE>){
         my $parent = $3;
         my $cell = "";
         if($view eq "digitaltext") {
-             #not sure this is 100% correct for all use case.
+             #not sure this is 100% correct for all use case and whether the $instbindtable file is always there
              $inst =~ m/.*\.(.*)/;                   
              foreach (`grep '^\"$1\" ' $instbindtable`) {
                  chomp;
@@ -788,6 +788,15 @@ sub generate_random_string
 	return $random_string;
 }
 
+#######################################################################################
+# This function to escape module/library names in SV that have non 0-9a-ZA-Z_chars
+#######################################################################################
+sub escape_name {
+	my $name=shift;
+    #Look for starting with a number
+    if($name =~ /^\d+/) { $name = "\\$name ";}
+    return $name;   
+} 
 
 __DATA__
  

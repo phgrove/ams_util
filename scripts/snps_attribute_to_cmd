@@ -2,34 +2,42 @@
 
 #################################################################################################
 ## 
-## MIT No Attribution
-##
-## Permission is hereby granted, free of charge, to any person obtaining a copy of this
-## software and associated documentation files (the "Software"), to deal in the Software
-## without restriction, including without limitation the rights to use, copy, modify,
-## merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-## permit persons to whom the Software is furnished to do so.
-##
-## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-## INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-## PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-## HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-## OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-## SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+## The MIT License (MIT)
+## 
+## Copyright (c) 2024 
+## 
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the "Software"), to deal
+## in the Software without restriction, including without limitation the rights
+## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+## copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+## 
+## The above copyright notice and this permission notice shall be included in all
+## copies or substantial portions of the Software.
+## 
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+## SOFTWARE.
 ## 
 #################################################################################################
 
+use Pod::Usage;
+
 my $cmd_called          = $0." ".join(" ", @ARGV);
+#print "\n\n$cmd_called\n\n";
 
 #Script get 3 arguments
-my $in_file = $ARGV[0]; #Input warning log file
-my $out_file= $ARGV[1]; #Output command file
-my $err_file= $ARGV[2]; #Output error file for any errors
-
+my $in_file = $ARGV[0];
+my $out_file= $ARGV[1];
+my $err_file= $ARGV[2];
 #Line number count
 my $line_number = 0;
 
-#Hash of commands created already so duplicates are not made.
 my %ams_cmds;
 my $ams_cmd;
 
@@ -85,14 +93,14 @@ while(<IN_FILE>){
                         $key    =~ s/\"//gms;
                         $value  =~ s/\"//gms;                                                                   
                         $ams_cmd = "ams_cdef_inst -lib $lib -cell $mod -inst { $inst } -supply { $key => $value };";
-                        if(exists $ams_cmd{$ams_cmd} && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
+                        if(!(exists $ams_cmd{$ams_cmd}) && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
                             print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                             print OUT_FILE "//File       : $file\n";
                             print OUT_FILE "//Key        : $key\n";
                             print OUT_FILE "//Module type: module\n";
                             print OUT_FILE "//Construct  : $construct\n";
                             print OUT_FILE "//$ams_cmd\n";
-                        } else {
+                        } elsif() {
                             $ams_cmd{$ams_cmd} = undef;
                             print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                             print OUT_FILE "//File       : $file\n";
@@ -114,7 +122,7 @@ while(<IN_FILE>){
                         print OUT_FILE "//Module type: module\n";
                         print OUT_FILE "//Construct  : $construct\n";
                         print OUT_FILE "//$ams_cmd\n";
-                    } else {
+                    } elsif(! {
                         $ams_cmd{$ams_cmd} = undef;
                         print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                         print OUT_FILE "//File       : $file\n";
@@ -169,14 +177,14 @@ while(<IN_FILE>){
                     $supply =~ s/\"//gms;
                     $gnd    =~ s/\"//gms;
                     $ams_cmd = "ams_supply -lib $lib -cell $mod -digital_port { $node } -supply { port_power => $supply, port_ground => $gnd };";
-                    if(exists $ams_cmd{$ams_cmd}  && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
+                    if(exists $ams_cmd{$ams_cmd} && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
                         print OUT_FILE "//Entry      : $id ($line_number)\n";
                         print OUT_FILE "//File       : $file\n";
                         print OUT_FILE "//Key        : supplySensitivity\n";
                         print OUT_FILE "//Module type: module\n";
                         print OUT_FILE "//Construct  : $construct\n";
                         print OUT_FILE "//$ams_cmd\n";
-                    } else {
+                    } else { 
                         $ams_cmd{$ams_cmd} = undef;
                         print OUT_FILE "//Entry      : $id ($line_number)\n";
                         print OUT_FILE "//File       : $file\n";
@@ -248,3 +256,31 @@ while(<IN_FILE>){
 close(IN_FILE);
 close(OUT_FILE);
 close(ERR_FILE);
+
+#`rm $out_file;touch $out_file`;  
+
+__DATA__
+ 
+=head1 NAME
+
+A script to read in the non-LRM constructs file generated by Synopsys VCS-AMS tool and convert it to a 
+command file that VCS-AMS can read in.
+
+=head1 VERSION
+
+1.00 - initial Release.
+
+=head1 DESCRIPTION
+
+The Cadence UNL-AMS netlister and flow support non-LRM attributes to define power intent and connectivity. This
+is not support in many tools. When these attributes are found in the code VCS-AMS reports them to an error file.
+This script reads the error file and converts the the attributes to ams_* command to define the power intent in 
+the VCS-AMS flow. If there is a construct not covered it is reported in the output error file. 
+
+=head1 SYNOPSIS
+
+snps_attributes_to_cmd <I<input non-LRM file>> <I<output VCS-AMS command file>> <I<error file>>
+
+=back
+
+=cut

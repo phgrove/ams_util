@@ -225,6 +225,7 @@ while(<IN_FILE>){
                         $ams_cmd = "ams_cdef_net_cm -lib $lib -cell $mod -cm_net { $node } -default_supply { ".($name =~ /^\w*vdd$/ ? "snps_cm_power":"snps_cm_ground")." => $default } -inherited_supply { $name  => $default };";
                     }
                     if(!(exists $ams_cmd{$ams_cmd})) {
+                        $ams_cmd{$ams_cmd} = undef;
                         print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                         print OUT_FILE "//File       : $file\n";
                         print OUT_FILE "//Key        : inh_conn_prop_name\n";

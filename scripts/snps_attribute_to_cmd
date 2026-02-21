@@ -93,36 +93,30 @@ while(<IN_FILE>){
                         $key    =~ s/\"//gms;
                         $value  =~ s/\"//gms;                                                                   
                         $ams_cmd = "ams_cdef_inst -lib $lib -cell $mod -inst { $inst } -supply { $key => $value };";
-                        if(!(exists $ams_cmd{$ams_cmd}) && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
-                            print OUT_FILE "//Entry      : $id (Line $line_number)\n";
-                            print OUT_FILE "//File       : $file\n";
-                            print OUT_FILE "//Key        : $key\n";
-                            print OUT_FILE "//Module type: module\n";
-                            print OUT_FILE "//Construct  : $construct\n";
-                            print OUT_FILE "//$ams_cmd\n";
-                        } elsif() {
+                        if(!(exists $ams_cmd{$ams_cmd})) {
                             $ams_cmd{$ams_cmd} = undef;
                             print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                             print OUT_FILE "//File       : $file\n";
                             print OUT_FILE "//Key        : $key\n";
                             print OUT_FILE "//Module type: module\n";
-                            print OUT_FILE "//Construct  : $construct\n";                            
+                            print OUT_FILE "//Construct  : $construct\n";
                             print OUT_FILE "$ams_cmd\n";
-                        }
-                        print OUT_FILE "\n";
+                            print OUT_FILE "\n";
+                        } elsif(!(defined $ENV{SNPS_ATTRIB_NO_DUP})) {                            
+                            print OUT_FILE "//Entry      : $id (Line $line_number)\n";
+                            print OUT_FILE "//File       : $file\n";
+                            print OUT_FILE "//Key        : $key\n";
+                            print OUT_FILE "//Module type: module\n";
+                            print OUT_FILE "//Construct  : $construct\n";                            
+                            print OUT_FILE "//$ams_cmd\n";
+                            print OUT_FILE "\n";
+                        }                        
                     }
                 } elsif ($attrib =~ /integer passed_mfactor\s+=\s+(.*);/) {
                     my $mfactor = $1;
                     $mfactor =~ s/\"//gms;
                     $ams_cmd = "ams_mfactor -lib $lib -cell $mod -local_inst $inst -param_override $mfactor;";
-                    if(exists $ams_cmd{$ams_cmd}  && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
-                        print OUT_FILE "//Entry      : $id (Line $line_number)\n";
-                        print OUT_FILE "//File       : $file\n";
-                        print OUT_FILE "//Key        : passed_mfactor\n";
-                        print OUT_FILE "//Module type: module\n";
-                        print OUT_FILE "//Construct  : $construct\n";
-                        print OUT_FILE "//$ams_cmd\n";
-                    } elsif(! {
+                    if(!(exists $ams_cmd{$ams_cmd})) {
                         $ams_cmd{$ams_cmd} = undef;
                         print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                         print OUT_FILE "//File       : $file\n";
@@ -130,8 +124,16 @@ while(<IN_FILE>){
                         print OUT_FILE "//Module type: module\n";
                         print OUT_FILE "//Construct  : $construct\n";
                         print OUT_FILE "$ams_cmd\n";
-                    }                                        
-                    print OUT_FILE "\n";
+                        print OUT_FILE "\n";
+                    } elsif(!(defined $ENV{SNPS_ATTRIB_NO_DUP})) {                        
+                        print OUT_FILE "//Entry      : $id (Line $line_number)\n";
+                        print OUT_FILE "//File       : $file\n";
+                        print OUT_FILE "//Key        : passed_mfactor\n";
+                        print OUT_FILE "//Module type: module\n";
+                        print OUT_FILE "//Construct  : $construct\n";
+                        print OUT_FILE "//$ams_cmd\n";
+                        print OUT_FILE "\n";
+                    }                                                            
                 } else {
                     print ERR_FILE "Error on instance attribute $id (Line $line_number)\n"; die;
                 }
@@ -154,46 +156,48 @@ while(<IN_FILE>){
                     #Escape paths
                     $default = join '.', map { $_ =~ /^[a-zA-Z_]+[a-zA-Z_0-9]*$/ ? "$_":"\\$_" } split('\.',$default);
                     $ams_cmd = "ams_cdef_net -lib $lib -cell $mod -net { $node } -default_supply { $name => $default };";
-                    if(exists $ams_cmd{$ams_cmd}  && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
-                        print OUT_FILE "//Entry      : $id (Line $line_number)\n";
-                        print OUT_FILE "//File       : $file\n";
-                        print OUT_FILE "//Key        : inh_conn_prop_name\n";
-                        print OUT_FILE "//Module type: module\n";
-                        print OUT_FILE "//Construct  : $construct\n";
-                        print OUT_FILE "//$ams_cmd\n";
-                    } else {
+                    if(!(exists $ams_cmd{$ams_cmd})) {
                         $ams_cmd{$ams_cmd} = undef;
                         print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                         print OUT_FILE "//File       : $file\n";
                         print OUT_FILE "//Key        : inh_conn_prop_name\n";
                         print OUT_FILE "//Module type: module\n";
-                        print OUT_FILE "//Construct  : $construct\n";                        
+                        print OUT_FILE "//Construct  : $construct\n";
                         print OUT_FILE "$ams_cmd\n";
-                    }
-                    print OUT_FILE "\n";
+                        print OUT_FILE "\n";
+                    } elsif(!(defined $ENV{SNPS_ATTRIB_NO_DUP})) { 
+                        print OUT_FILE "//Entry      : $id (Line $line_number)\n";
+                        print OUT_FILE "//File       : $file\n";
+                        print OUT_FILE "//Key        : inh_conn_prop_name\n";
+                        print OUT_FILE "//Module type: module\n";
+                        print OUT_FILE "//Construct  : $construct\n";                        
+                        print OUT_FILE "//$ams_cmd\n";
+                        print OUT_FILE "\n";
+                    }                    
                 } elsif ($attrib =~ /integer\s+supplySensitivity\s+=\s+(.*);\s+integer\s+groundSensitivity\s+=\s+(.*);/){
                     my $supply = $1;
                     my $gnd    = $2;
                     $supply =~ s/\"//gms;
                     $gnd    =~ s/\"//gms;
                     $ams_cmd = "ams_supply -lib $lib -cell $mod -digital_port { $node } -supply { port_power => $supply, port_ground => $gnd };";
-                    if(exists $ams_cmd{$ams_cmd} && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
-                        print OUT_FILE "//Entry      : $id ($line_number)\n";
-                        print OUT_FILE "//File       : $file\n";
-                        print OUT_FILE "//Key        : supplySensitivity\n";
-                        print OUT_FILE "//Module type: module\n";
-                        print OUT_FILE "//Construct  : $construct\n";
-                        print OUT_FILE "//$ams_cmd\n";
-                    } else { 
+                    if(!(exists $ams_cmd{$ams_cmd})) {
                         $ams_cmd{$ams_cmd} = undef;
                         print OUT_FILE "//Entry      : $id ($line_number)\n";
                         print OUT_FILE "//File       : $file\n";
                         print OUT_FILE "//Key        : supplySensitivity\n";
                         print OUT_FILE "//Module type: module\n";
-                        print OUT_FILE "//Construct  : $construct\n";                        
+                        print OUT_FILE "//Construct  : $construct\n";
                         print OUT_FILE "$ams_cmd\n";
-                    }
-                    print OUT_FILE "\n";
+                        print OUT_FILE "\n";
+                    } elsif(!(defined $ENV{SNPS_ATTRIB_NO_DUP})) { 
+                        print OUT_FILE "//Entry      : $id ($line_number)\n";
+                        print OUT_FILE "//File       : $file\n";
+                        print OUT_FILE "//Key        : supplySensitivity\n";
+                        print OUT_FILE "//Module type: module\n";
+                        print OUT_FILE "//Construct  : $construct\n";                        
+                        print OUT_FILE "//$ams_cmd\n";
+                        print OUT_FILE "\n";
+                    }                    
                 } else {
                     print ERR_FILE "Error on node attribute (module) $id (Line $line_number)\n"; die;
                 }
@@ -220,23 +224,23 @@ while(<IN_FILE>){
                     } else {
                         $ams_cmd = "ams_cdef_net_cm -lib $lib -cell $mod -cm_net { $node } -default_supply { ".($name =~ /^\w*vdd$/ ? "snps_cm_power":"snps_cm_ground")." => $default } -inherited_supply { $name  => $default };";
                     }
-                    if(exists $ams_cmd{$ams_cmd}  && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
+                    if(!(exists $ams_cmd{$ams_cmd})) {
                         print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                         print OUT_FILE "//File       : $file\n";
                         print OUT_FILE "//Key        : inh_conn_prop_name\n";
                         print OUT_FILE "//Module type: connectmodule\n";
                         print OUT_FILE "//Construct  : $construct\n";
-                        print OUT_FILE "//$ams_cmd\n";
-                    } else {
-                        $ams_cmd{$ams_cmd} = undef;
+                        print OUT_FILE "$ams_cmd\n";
+                        print OUT_FILE "\n";
+                    } elsif(!(defined $ENV{SNPS_ATTRIB_NO_DUP})) {                         
                         print OUT_FILE "//Entry      : $id (Line $line_number)\n";
                         print OUT_FILE "//File       : $file\n";
                         print OUT_FILE "//Key        : inh_conn_prop_name\n";
                         print OUT_FILE "//Module type: connectmodule\n";
                         print OUT_FILE "//Construct  : $construct\n";                        
-                        print OUT_FILE "$ams_cmd\n";
-                    }
-                    print OUT_FILE "\n";
+                        print OUT_FILE "//$ams_cmd\n";
+                        print OUT_FILE "\n";
+                    }                    
                 } else {
                     print ERR_FILE "Error on node attribute (connect module) $id (Line $line_number)\n"; die;                
                 }
@@ -256,8 +260,6 @@ while(<IN_FILE>){
 close(IN_FILE);
 close(OUT_FILE);
 close(ERR_FILE);
-
-#`rm $out_file;touch $out_file`;  
 
 __DATA__
  

@@ -106,11 +106,6 @@ while(<IN_FILE>){
                 } elsif ($attrib =~ /integer passed_mfactor\s+=\s+(.*);/) {
                     my $mfactor = $1;
                     $mfactor =~ s/\"//gms;
-                    print OUT_FILE "//Entry      : $id (Line $line_number)\n";
-                    print OUT_FILE "//File       : $file\n";
-                    print OUT_FILE "//Key        : passed_mfactor\n";
-                    print OUT_FILE "//Module type: module\n";
-                    print OUT_FILE "//Construct  : $construct\n";
                     $ams_cmd = "ams_mfactor -lib $lib -cell $mod -local_inst $inst -param_override $mfactor;";
                     if(exists $ams_cmd{$ams_cmd}  && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
                         print OUT_FILE "//Entry      : $id (Line $line_number)\n";
@@ -173,11 +168,6 @@ while(<IN_FILE>){
                     my $gnd    = $2;
                     $supply =~ s/\"//gms;
                     $gnd    =~ s/\"//gms;
-                    print OUT_FILE "//Entry      : $id ($line_number)\n";
-                    print OUT_FILE "//File       : $file\n";
-                    print OUT_FILE "//Key        : supplySensitivity\n";
-                    print OUT_FILE "//Module type: module\n";
-                    print OUT_FILE "//Construct  : $construct\n";
                     $ams_cmd = "ams_supply -lib $lib -cell $mod -digital_port { $node } -supply { port_power => $supply, port_ground => $gnd };";
                     if(exists $ams_cmd{$ams_cmd}  && !(defined $ENV{SNPS_ATTRIB_NO_DUP})) {
                         print OUT_FILE "//Entry      : $id ($line_number)\n";

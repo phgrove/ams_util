@@ -260,6 +260,12 @@ while(<FILE>) {
     #Convert real2int to $itor as this is in the LRM but for digital context only. However a parameter
     #has no context so is allowed. Verilog-AMS 2023 made $itor available for digital and analog context.
     $line =~ s/real2int\(/\$itor\(/g;
+    
+	#Map analoglib diffsprobe, diffstbprobe and diffstbprobe_gnd to a short as they don't do anything in 
+    #a transient simulation. 
+    $line =~ s/^diffsprobe\s+(\S+)\s*\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)\s*;/cds_alias #\(1\) $1___1($2, $4);\ncds_alias #\(1\) $1___2($3, $5);/;
+    $line =~ s/^diffstbprobe\s+(\S+)\s*\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)\s*;/cds_alias #\(1\) $1___1($2, $4);\ncds_alias #\(1\) $1___2($3, $5);/;
+    $line =~ s/^diffstbprobe_gnd\s+(\S+)\s*\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)\s*;/cds_alias #\(1\) $1___1($2, $4);\ncds_alias #\(1\) $1___2($3, $5);/;
 
     #m parameters on instances be set to $mfactor as per the LRM. This works in conjunction with
     #the value of the passed_mfactor attribute
@@ -385,6 +391,18 @@ foreach my $lib ( sort keys %libs) {
         }
     }
 }
+
+#######################################################################################
+#Fix any Verilog-A file so that they can be compiled are Verilog-AMS
+#######################################################################################
+foreach my $out_file (keys %gen_files) {
+    if($out_file =~ /.*\.va$/) {
+         #Look for real/integer <name> = <value>; and change to real/integer <name>; analog initial <name> = <value>;
+         #This is because most EDA tools assume that and assignment at declaration means the varaible it digital, and this file
+         #is read as Verilog-AMS in the VCS-AMS flow by this converter. 
+         `perl -0777 -pi -e 's/^(\\s*)(integer|real)(\\s+)(\\w+)\\s*=\\s*(.*?);/\$1\$2\$3\$4; analog initial \$4 = \$5;/gms' $out_file`;
+    }       
+}       
 
 #Add as footer to files.
 print "Copying Merged files to $outdir\n";

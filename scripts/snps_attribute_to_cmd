@@ -91,7 +91,9 @@ while(<IN_FILE>){
                         my $key     = $1;
                         my $value   = $2;
                         $key    =~ s/\"//gms;
-                        $value  =~ s/\"//gms;                                                                   
+                        $value  =~ s/\"//gms;    
+                        #Escape paths
+                        $value = join '.', map { $_ =~ /^[a-zA-Z_]+[a-zA-Z_0-9]*$/ ? "$_":"\\$_" } split('\.',$value); 
                         $ams_cmd = "ams_cdef_inst -lib $lib -cell $mod -inst { $inst } -supply { $key => $value };";
                         if(!(exists $ams_cmd{$ams_cmd})) {
                             $ams_cmd{$ams_cmd} = undef;

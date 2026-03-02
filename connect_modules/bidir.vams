@@ -121,7 +121,7 @@ connectmodule bidir(d,a);
             end            
             2'b10 : begin     // 1'bz
                vout = 0.5;
-               rout = res(6);//res[6];
+               rout = res(0);//res[0];
             end
             default : begin   // 1'bx
                vout = 0.5;

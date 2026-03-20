@@ -493,16 +493,18 @@ while(<FILE>){
         if($view eq "digitaltext") {
              #not sure this is 100% correct for all use case and whether the $instbindtable file is always there
              $inst =~ m/.*\.(.*)/;                   
-             foreach (`grep '^\"$1\" ' $instbindtable`) {
-                 chomp;
-                 my @t = split(/\)\s*\(/, $_);                        
-                 $t[1] =~ m/\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"\)/;
-                 if($parent eq "$1.$2:$3") {
-                     $t[0] =~ m/\(\(\(\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"/;
-                     $cell = $2;
-                     last;
-                 }
-             }
+             if(-e $instbindtable) {
+				 foreach (`grep '^\"$1\" ' $instbindtable`) {
+	                 chomp;
+	                 my @t = split(/\)\s*\(/, $_);                        
+	                 $t[1] =~ m/\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"\)/;
+	                 if($parent eq "$1.$2:$3") {
+	                     $t[0] =~ m/\(\(\(\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"\s+\"(.*)\"/;
+	                     $cell = $2;
+	                     last;
+	                 }
+	             }
+			 }
 			 if($cell eq "") {
 				printf CONFIG "   instance %-150s liblist work; //digitaltext\n", $inst;
 			 } else {

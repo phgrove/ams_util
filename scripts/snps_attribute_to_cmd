@@ -223,7 +223,7 @@ while(<IN_FILE>){
                         print OUT_FILE "\n";
                     }                    
                 } elsif ($attrib =~ /integer\s+groundSensitivity\s+=\s+(.*);/){
-                    my $gnd    = $2;
+                    my $gnd    = $1;
                     $gnd    =~ s/\"//gms;
                     $ams_cmd = "ams_supply -lib $lib -cell $mod -digital_port { $node } -supply { port_ground => $gnd };";
                     if(!(exists $ams_cmd{$ams_cmd})) {

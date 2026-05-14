@@ -423,8 +423,8 @@ printf CONFIG "config $top;\n";
 while(<FILE>){
     chomp;
     if($_ =~ m/^\s*config\s+designtop=\"(.*)\.(.*):(.*)\".*$/) {
-        printf CONFIG "      design $1.$2;\n";        
-        printf CONFIG "      default liblist $1 `ifdef XCELIUM worklib `else work `endif;\n";
+        printf CONFIG "   design $1.$2;\n";        
+        printf CONFIG "   default liblist $1 `ifdef XCELIUM worklib `else work `endif;\n";
     }
     #General mapping we have lib/cell/view to check it exists in DB
     elsif($_ =~ m/^\s*config\s+cell=\"(.*)\"\s+lib=\"(.*)\"\s+view=\"(.*?)\".*$/){
@@ -527,8 +527,8 @@ printf CONFIG "endconfig\n";
 #For the ext_dig_cells/ext_ana_cells create Verilog Configs
 foreach (@ext_dig_cells) {
   printf CONFIG "config sv_config__${_};\n";
-  printf CONFIG "    design work.${_};\n";
-  printf CONFIG "    default liblist work;\n";
+  printf CONFIG "   design work.${_};\n";
+  printf CONFIG "   default liblist work;\n";
   printf CONFIG "endconfig\n";
 }
 

@@ -11,8 +11,10 @@ viewName    = asiGetDesignViewName(sess)
 ;design vars as list from the current session
 des_vars    = asiGetDesignVarList(sess)
 
-;netlist location of current session
-netlist_dir = asiGetNetlistDir(sess) 
+;Results folder for current session
+results_dir = asiGetResultsDir(sess) 
+
+info(strcat("Ruuning UNL on " libName ":" cellName ":" viewName " to netlist folder " results_dir "\n"))
 
 ;------------------------------
 ;Create a netlist in a tmp area
@@ -50,12 +52,12 @@ asiGetSimulationRunCommand( asiGetCurrentSession() )
 
 ;call translator and copy results to simulation run folder
 ;lib:cell:view just so it has some useful name. cdslib needed to for regex on env
-cmd = strcat("~/unl2lrm.pl -lib " libName " -cell " cellName " -view " viewName " -cdslib " getWorkingDir() "/cds.lib -unl_dir " netlist_tmp_folder "/../ -outdir " netlist_dir "/snps_netlist -debug" )
-info(cmd "\n")
+cmd = strcat("~/unl2lrm.pl -lib " libName " -cell " cellName " -view " viewName " -cdslib " getWorkingDir() "/cds.lib -unl_dir " netlist_tmp_folder "/../ -outdir " results_dir "/snps_netlist" )
+info(strcat(cmd "\n"))
 ipc = ipcBeginProcess(cmd)  
 if(ipcWait(ipc, 15, 60) == 0 then
   error(strcat("Command failed:\n" ipcReadProcess(ipc)))
 else
-  info(strcat("Converted netlist in " ipcReadProcess(ipc)))
+  info(strcat("Converted netlist in " results_dir "/snps_netlist" ))
 )
 

@@ -649,7 +649,7 @@ if(-e "$temp_location/netlist/cds_globals.vams") {
 #Spice model 
 if(-e "$temp_location/netlist/spiceModels.scs") {
     open(my $spicemodels,   "<", "${temp_location}/netlist/spiceModels.scs");
-    open(my $op_spicemodels,">", "${path}spiceModels.scs");
+    open(my $op_spicemodels,">", "${outdir}spiceModels.scs");
     while(<$spicemodels>){
        chomp;
        #Map IC_INVOKE_DIR by mapping to the path to virtuoso.
@@ -664,7 +664,7 @@ if(-e "$temp_location/netlist/spiceModels.scs") {
             my $line = $1;
             my $post_fix = $3;
             $line =~ m/.*\/(\w+)\/(\w+)\/(spice\.spc|spectre\.scs|design\.pspice)/;
-            `cp -L $line  ${path}$1.$2.$3; chmod +w ${path}$1.$2.$3`;
+            `cp -L $line  ${outdir}$1.$2.$3; chmod +w ${outdir}$1.$2.$3`;
             my $include = ($line =~ m/.*\.pspice$/) ? "pspice_include":"include";
             print $op_spicemodels "$include \"$1.$2.$3\"$post_fix\n";
         } else {

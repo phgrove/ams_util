@@ -419,6 +419,7 @@ my @ext_dig_cells;
 my @ext_ana_cells;
 open(FILE,   "<",$amsbind) or die "Failed to open $amsbind file";
 open(CONFIG, ">","${outdir}/${verilog_config}") or die "Failed to write to file ${outdir}/${verilog_config}";
+printf CONFIG "config $top;\n";
 while(<FILE>){
     chomp;
     if($_ =~ m/^\s*config\s+designtop=\"(.*)\.(.*):(.*)\".*$/) {

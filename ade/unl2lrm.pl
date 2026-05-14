@@ -181,8 +181,8 @@ print "Temp location:       $temp_location\n";
 ####################################################################################### 
 $outdir = File::Spec->rel2abs($outdir);
 #Assume ADE has created this already
-#`rm -rf $outdir`;
-#`mkdir  $outdir`;
+`rm -rf $outdir`;
+`mkdir  $outdir`;
 print "Output location:     $outdir\n";
 
 #######################################################################################

@@ -26,18 +26,27 @@
 ## 
 #################################################################################################
 
+#The following ENV's can be used to control the script.
+#
+#SNPS_ATTRIB_NO_DUP                 - Stops duplicate entires been placed in output command file. 
+#SNPS_ATTRIB_NO_AMS_CDEF            - Don't create ams_cdef_net_cm command for Connect Modules
+#SNPS_ATTRIB_NO_AMS_CDEF_INHERITED  - Don't use inherited_supply option with the ams_cdef_net_cm command for Connect Modules
+
 use Pod::Usage;
 
+#For debug
 my $cmd_called          = $0." ".join(" ", @ARGV);
-#print "\n\n$cmd_called\n\n";
 
 #Script get 3 arguments
-my $in_file = $ARGV[0];
-my $out_file= $ARGV[1];
-my $err_file= $ARGV[2];
+if($#ARGV != 2) { die("snps_attribute_to_cmd expects 3 inputs arguements.\n"); }
+my $in_file = $ARGV[0]; #Input warning file from the tool
+my $out_file= $ARGV[1]; #Output command file
+my $err_file= $ARGV[2]; #Output error file that should be empty
+
 #Line number count
 my $line_number = 0;
 
+#Vars
 my %ams_cmds;
 my $ams_cmd;
 
@@ -45,9 +54,9 @@ my $ams_cmd;
 `dos2unix -q $in_file`;
 
 #Open files
-open(IN_FILE, "<", $in_file);
-open(OUT_FILE,">", $out_file);
-open(ERR_FILE,">", $err_file);
+open(IN_FILE, "<", $in_file)  or die("Can't open input file.");
+open(OUT_FILE,">", $out_file) or die("Can't create output control file.");
+open(ERR_FILE,">", $err_file) or die("Can't create output error file.");
 
 #$/="*)";
 while(<IN_FILE>){
@@ -265,7 +274,9 @@ while(<IN_FILE>){
                     $default =~ s/\"//gms; 
                     #Escape paths
                     $default = join '.', map { $_ =~ /^[a-zA-Z_]+[a-zA-Z_0-9]*$/ ? "$_":"\\$_" } split('\.',$default);
-                    if(defined $ENV{NO_AMS_CDEF_INHERITED}) {
+                    if(defined $ENV{SNPS_ATTRIB_NO_AMS_CDEF}){
+                        $ams_cmd = "// ams_cdef_net_cm skipped - assumed that the Connect Module hook up is done in the vcsAD.init file.";
+                    } elsif(defined $ENV{SNPS_ATTRIB_NO_AMS_CDEF_INHERITED}) {
                         $ams_cmd = "ams_cdef_net_cm -lib $lib -cell $mod -cm_net { $node } -default_supply { ".($name =~ /^\w*vdd$/ ? "snps_cm_power":"snps_cm_ground")." => $default  };";
                     } else {
                         $ams_cmd = "ams_cdef_net_cm -lib $lib -cell $mod -cm_net { $node } -default_supply { ".($name =~ /^\w*vdd$/ ? "snps_cm_power":"snps_cm_ground")." => $default } -inherited_supply { $name  => $default };";
@@ -333,4 +344,3 @@ snps_attributes_to_cmd <I<input non-LRM file>> <I<output VCS-AMS command file>> 
 =back
 
 =cut
-
